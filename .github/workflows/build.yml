@@ -8,12 +8,20 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container: devkitpro/devkitppc:latest
+
     steps:
       - uses: actions/checkout@v4
+
+      - name: Unzip source
+        run: unzip Will_Sports_Wii_Source.zip
+
       - name: Build
-        run: make
+        run: |
+          cd Will_Sports_Wii_Source
+          make
+
       - name: Upload boot.dol
         uses: actions/upload-artifact@v4
         with:
           name: boot-dol
-          path: boot.dol
+          path: Will_Sports_Wii_Source/boot.dol
