@@ -1,52 +1,76 @@
-name: Build Wii DOL
-
-on:
-  workflow_dispatch:
-  push:
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    container: devkitpro/devkitppc:latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Unzip source
-        run: |
-          unzip -o Will_Sports_Wii_Source.zip
-          ls -la
-          find . -maxdepth 3 -type f
-
-      - name: Build
-        run: |
-          source /etc/profile.d/devkit-env.sh || true
-          export DEVKITPRO=/opt/devkitpro
-          export DEVKITPPC=/opt/devkitpro/devkitPPC
-          export PATH="$DEVKITPPC/bin:$DEVKITPRO/tools/bin:$PATH"
-          
-          # Update and install Wii development libraries
-          dkp-pacman -Syu --noconfirm || true
-          dkp-pacman -S ppc-libogc ppc-bte --noconfirm || true
-
-          cd Will_Sports_Wii_Source
-
-          awk '
-            { print }
-            $0 == "include $(DEVKITPPC)/wii_rules" {
-              print "CFLAGS := -g -O2 -Wall $(MACHDEP)"
-              print "LDFLAGS := -g $(MACHDEP)"
-            }
-          ' Makefile > Makefile.fixed
-          mv Makefile.fixed Makefile
-
-          make clean || true
-          make all
-          find . -type f
-          cp boot.dol ../boot.dol
-
-      - name: Upload boot.dol
-        uses: actions/upload-artifact@v4
-        with:
-          name: boot-dol
-          path: boot.dol
+[
+  {
+    "id": "download_node",
+    "type": "http request",
+    "z": "flow_id",
+    "name": "Download boot.dol",
+    "method": "GET",
+    "ret": "bin",
+    "paytoqs": "ignore",
+    "url": "https://example.com/boot.dol",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "authType": "",
+    "x": 300,
+    "y": 100,
+    "wires": [
+      [
+        "file_write"
+      ]
+    ]
+  },
+  {
+    "id": "file_write",
+    "type": "file",
+    "z": "flow_id",
+    "name": "Save boot.dol",
+    "filename": "/home/user/boot.dol",
+    "appendNewline": false,
+    "createDir": true,
+    "overwriteFile": "true",
+    "encoding": "none",
+    "x": 550,
+    "y": 100,
+    "wires": [
+      [
+        "debug"
+      ]
+    ]
+  },
+  {
+    "id": "debug",
+    "type": "debug",
+    "z": "flow_id",
+    "name": "Downloaded",
+    "active": true,
+    "x": 750,
+    "y": 100,
+    "wires": []
+  },
+  {
+    "id": "inject",
+    "type": "inject",
+    "z": "flow_id",
+    "name": "Start Download",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 100,
+    "y": 100,
+    "wires": [
+      [
+        "download_node"
+      ]
+    ]
+  }
+]
