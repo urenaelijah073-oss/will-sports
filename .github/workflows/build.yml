@@ -20,20 +20,29 @@ jobs:
 
       - name: Build
         run: |
+          source /etc/profile.d/devkit-env.sh || true
+          export DEVKITPRO=/opt/devkitpro
+          export DEVKITPPC=/opt/devkitpro/devkitPPC
+          export PATH="$DEVKITPPC/bin:$DEVKITPRO/tools/bin:$PATH"
+
           cd Will_Sports_Wii_Source
+
+          awk '
+            { print }
+            $0 == "include $(DEVKITPPC)/wii_rules" {
+              print "CFLAGS := -g -O2 -Wall $(MACHDEP)"
+              print "LDFLAGS := -g $(MACHDEP)"
+            }
+          ' Makefile > Makefile.fixed
+          mv Makefile.fixed Makefile
+
           make clean || true
           make all
-          echo "FILES AFTER BUILD:"
           find . -type f
-
-      - name: Find boot.dol
-        run: |
-          mkdir -p artifact
-          find . -name "boot.dol" -exec cp {} artifact/boot.dol \;
-          ls -la artifact
+          cp boot.dol ../boot.dol
 
       - name: Upload boot.dol
         uses: actions/upload-artifact@v4
         with:
           name: boot-dol
-          path: artifact/boot.dol
+          path: boot.dol
