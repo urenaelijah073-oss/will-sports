@@ -24,6 +24,10 @@ jobs:
           export DEVKITPRO=/opt/devkitpro
           export DEVKITPPC=/opt/devkitpro/devkitPPC
           export PATH="$DEVKITPPC/bin:$DEVKITPRO/tools/bin:$PATH"
+          
+          # Update and install Wii development libraries
+          dkp-pacman -Syu --noconfirm || true
+          dkp-pacman -S ppc-libogc ppc-bte --noconfirm || true
 
           cd Will_Sports_Wii_Source
 
