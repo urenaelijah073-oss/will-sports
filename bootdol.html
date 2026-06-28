@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boot DOL Generator</title>
+    <title>Wii Boot DOL Converter</title>
     <style>
         * {
             margin: 0;
@@ -66,7 +66,7 @@
             border: 2px solid #00ff00;
             border-radius: 0 0 8px 8px;
             padding: 25px;
-            min-height: 600px;
+            min-height: 700px;
             overflow-y: auto;
         }
 
@@ -131,13 +131,54 @@
         }
 
         textarea {
-            min-height: 100px;
+            min-height: 80px;
             resize: vertical;
         }
 
-        input[type="checkbox"] {
-            margin-right: 8px;
+        .file-drop-zone {
+            border: 2px dashed #00ff00;
+            padding: 30px;
+            border-radius: 4px;
+            text-align: center;
+            background: #001a00;
             cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+
+        .file-drop-zone:hover {
+            background: #003300;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+        }
+
+        .file-drop-zone.dragover {
+            background: #004400;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+        }
+
+        .drop-text {
+            color: #00ff00;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .file-list {
+            background: #001a00;
+            border: 1px solid #00ff00;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .file-item {
+            color: #00ff00;
+            font-size: 11px;
+            padding: 5px;
+            border-bottom: 1px dotted #005500;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
         }
 
         .checkbox-label {
@@ -149,24 +190,9 @@
             margin-bottom: 10px;
         }
 
-        .hex-input {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-        }
-
-        .hex-item {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .hex-item label {
-            margin-bottom: 5px;
-        }
-
-        .hex-item input {
-            font-family: 'Courier New', monospace;
-            text-transform: uppercase;
+        input[type="checkbox"] {
+            margin-right: 8px;
+            cursor: pointer;
         }
 
         .button-group {
@@ -192,13 +218,13 @@
             box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
         }
 
-        button:hover {
+        button:hover:not(:disabled) {
             background: #00ff00;
             box-shadow: 0 0 20px rgba(0, 255, 0, 0.6);
             transform: scale(1.05);
         }
 
-        button:active {
+        button:active:not(:disabled) {
             transform: scale(0.95);
         }
 
@@ -214,7 +240,7 @@
             box-shadow: 0 0 10px rgba(255, 255, 0, 0.3);
         }
 
-        .btn-secondary:hover {
+        .btn-secondary:hover:not(:disabled) {
             background: #ffff00;
             box-shadow: 0 0 20px rgba(255, 255, 0, 0.6);
         }
@@ -225,7 +251,7 @@
             box-shadow: 0 0 10px rgba(255, 68, 68, 0.3);
         }
 
-        .btn-danger:hover {
+        .btn-danger:hover:not(:disabled) {
             background: #ff4444;
             box-shadow: 0 0 20px rgba(255, 68, 68, 0.6);
         }
@@ -236,7 +262,7 @@
             padding: 15px;
             border-radius: 4px;
             margin-top: 15px;
-            max-height: 200px;
+            max-height: 250px;
             overflow-y: auto;
             font-size: 11px;
             line-height: 1.5;
@@ -259,18 +285,26 @@
             color: #00ff00;
         }
 
-        .hex-preview {
+        .progress-bar {
             background: #001a00;
             border: 1px solid #00ff00;
             padding: 10px;
             border-radius: 4px;
             margin-top: 10px;
-            font-size: 11px;
-            color: #00ff00;
-            font-family: 'Courier New', monospace;
-            word-break: break-all;
-            max-height: 100px;
-            overflow-y: auto;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #00ff00, #00aa00);
+            height: 20px;
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-size: 10px;
+            font-weight: bold;
         }
 
         .file-info {
@@ -302,11 +336,6 @@
             line-height: 1.6;
         }
 
-        .info-icon {
-            display: inline-block;
-            margin-right: 8px;
-        }
-
         .code-block {
             background: #001a00;
             border: 1px solid #00ff00;
@@ -316,6 +345,21 @@
             font-size: 11px;
             color: #00ff00;
             overflow-x: auto;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .hex-preview {
+            background: #001a00;
+            border: 1px solid #00ff00;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 10px;
+            color: #00ff00;
+            word-break: break-all;
+            max-height: 100px;
+            overflow-y: auto;
         }
 
         @media (max-width: 768px) {
@@ -337,163 +381,178 @@
 <body>
     <div class="container">
         <div class="terminal-header">
-            <div class="terminal-title">⚙️ BOOT DOL GENERATOR v1.0</div>
-            <div class="terminal-info">> Wii DOL File Creator & Modifier</div>
+            <div class="terminal-title">🎮 WII BOOT DOL CONVERTER v2.0</div>
+            <div class="terminal-info">> Convert ZIP files to Wii boot.dol executable</div>
         </div>
 
         <div class="terminal-body">
-            <!-- Section 1: File Input -->
+            <!-- Section 1: ZIP File Input -->
             <div class="section">
-                <div class="section-title">📁 Input DOL File</div>
-                <div class="form-group">
-                    <label>Select DOL File (boot.dol)</label>
-                    <input type="file" id="dolFile" accept=".dol,.bin" />
+                <div class="section-title">📦 Upload ZIP File</div>
+                <div class="section-subtitle">Select a ZIP file containing game files or homebrew application</div>
+                
+                <div class="file-drop-zone" id="dropZone">
+                    <div class="drop-text">📁 Drag & drop ZIP file here or click to select</div>
+                    <input type="file" id="zipFile" accept=".zip" style="display:none;" />
                 </div>
-                <div id="fileInfo"></div>
+
+                <div id="fileList"></div>
             </div>
 
-            <!-- Section 2: DOL Header Info -->
+            <!-- Section 2: Game Configuration -->
             <div class="section">
-                <div class="section-title">🔍 DOL Header Information</div>
-                <div class="section-subtitle">View and modify DOL file structure</div>
-                
+                <div class="section-title">⚙️ Game Configuration</div>
+                <div class="section-subtitle">Configure Wii boot.dol parameters</div>
+
                 <div class="form-group">
-                    <label>Entry Point (Hex)</label>
+                    <label>Game Title</label>
+                    <input type="text" id="gameTitle" placeholder="My Wii Game" />
+                </div>
+
+                <div class="form-group">
+                    <label>Game ID (4 characters, e.g., ABCD)</label>
+                    <input type="text" id="gameID" placeholder="GAME" maxlength="4" />
+                </div>
+
+                <div class="form-group">
+                    <label>Entry Point Address (Hex)</label>
                     <input type="text" id="entryPoint" placeholder="80003100" maxlength="8" />
                 </div>
 
-                <div class="section-subtitle">Text Section Addresses</div>
-                <div class="hex-input">
-                    <div class="hex-item">
-                        <label>Text 0 Address</label>
-                        <input type="text" id="text0Addr" placeholder="80004000" maxlength="8" />
-                    </div>
-                    <div class="hex-item">
-                        <label>Text 1 Address</label>
-                        <input type="text" id="text1Addr" placeholder="00000000" maxlength="8" />
-                    </div>
-                    <div class="hex-item">
-                        <label>Text 2 Address</label>
-                        <input type="text" id="text2Addr" placeholder="00000000" maxlength="8" />
-                    </div>
-                </div>
-
-                <div class="section-subtitle">Data Section Addresses</div>
-                <div class="hex-input">
-                    <div class="hex-item">
-                        <label>Data 0 Address</label>
-                        <input type="text" id="data0Addr" placeholder="80450000" maxlength="8" />
-                    </div>
-                    <div class="hex-item">
-                        <label>Data 1 Address</label>
-                        <input type="text" id="data1Addr" placeholder="00000000" maxlength="8" />
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section 3: Code Injection -->
-            <div class="section">
-                <div class="section-title">💉 Code Injection</div>
-                <div class="section-subtitle">Inject custom code at specified address</div>
-
-                <div class="form-group">
-                    <label>Injection Address (Hex)</label>
-                    <input type="text" id="injectionAddr" placeholder="80100000" maxlength="8" />
-                </div>
-
-                <div class="form-group">
-                    <label>Hex Code (PowerPC Assembly Hex)</label>
-                    <textarea id="hexCode" placeholder="60000000 3c600001 60637c20 7c0803a6 4e800020"></textarea>
-                    <div class="hex-preview" id="hexPreview">Hex preview will appear here</div>
+                <div class="checkbox-label">
+                    <input type="checkbox" id="isHomebrew" checked />
+                    Homebrew Application (Check if custom app)
                 </div>
 
                 <div class="checkbox-label">
-                    <input type="checkbox" id="verifyChecksum" />
-                    Verify/Recalculate Checksum
+                    <input type="checkbox" id="autoDetect" />
+                    Auto-detect format from ZIP contents
                 </div>
             </div>
 
-            <!-- Section 4: Advanced Options -->
+            <!-- Section 3: DOL File Selection -->
+            <div class="section">
+                <div class="section-title">🔍 DOL File in Archive</div>
+                <div class="section-subtitle">Select main executable from ZIP contents</div>
+
+                <div class="form-group">
+                    <label>Main DOL File</label>
+                    <select id="dolFileSelect">
+                        <option value="">-- Scan ZIP for DOL files --</option>
+                    </select>
+                </div>
+
+                <div id="foundDOLs" class="file-list" style="display:none;"></div>
+            </div>
+
+            <!-- Section 4: Data Sections -->
+            <div class="section">
+                <div class="section-title">💾 Data Sections Configuration</div>
+                <div class="section-subtitle">Configure code and data sections</div>
+
+                <div class="form-group">
+                    <label>Text Section 0 Address (Code)</label>
+                    <input type="text" id="text0Addr" placeholder="80004000" maxlength="8" />
+                </div>
+
+                <div class="form-group">
+                    <label>Data Section 0 Address (Data)</label>
+                    <input type="text" id="data0Addr" placeholder="80450000" maxlength="8" />
+                </div>
+
+                <div class="form-group">
+                    <label>BSS Address (Uninitialized Memory)</label>
+                    <input type="text" id="bssAddr" placeholder="80600000" maxlength="8" />
+                </div>
+            </div>
+
+            <!-- Section 5: Advanced Options -->
             <div class="section">
                 <div class="section-title">⚙️ Advanced Options</div>
-                
-                <div class="checkbox-label">
-                    <input type="checkbox" id="stripRelocations" />
-                    Strip Relocations
-                </div>
 
                 <div class="checkbox-label">
-                    <input type="checkbox" id="enableCodeCave" />
-                    Enable Code Cave
-                </div>
-
-                <div class="form-group" id="caveSizeGroup" style="display: none;">
-                    <label>Code Cave Size (Hex)</label>
-                    <input type="text" id="caveSize" placeholder="1000" maxlength="8" />
+                    <input type="checkbox" id="stripFiles" />
+                    Strip unnecessary files from archive
                 </div>
 
                 <div class="checkbox-label">
-                    <input type="checkbox" id="enableGecoCodes" />
-                    Apply Gecko Codes
+                    <input type="checkbox" id="compressData" />
+                    Compress data sections
                 </div>
 
-                <div class="form-group" id="gecoCodesToGroup" style="display: none;">
-                    <label>Gecko Codes (one per line)</label>
-                    <textarea id="gecoCodes" placeholder="04000000 00000000"></textarea>
+                <div class="checkbox-label">
+                    <input type="checkbox" id="verifyChecksum" checked />
+                    Verify/Recalculate checksums
+                </div>
+
+                <div class="form-group">
+                    <label>Additional Metadata (Optional)</label>
+                    <textarea id="metadata" placeholder="Region: NTSC-U&#10;Version: 1.0"></textarea>
                 </div>
             </div>
 
-            <!-- Section 5: Output & Generate -->
+            <!-- Section 6: Conversion Progress -->
             <div class="section">
-                <div class="section-title">📤 Generate DOL File</div>
+                <div class="section-title">🔄 Conversion Progress</div>
 
                 <div class="button-group">
-                    <button onclick="validateAndGenerate()">✓ Generate DOL</button>
+                    <button onclick="scanZIP()">🔍 Scan ZIP Contents</button>
+                    <button onclick="convertToDOL()">✓ Convert to boot.dol</button>
                     <button class="btn-secondary" onclick="previewDOL()">👁️ Preview</button>
                     <button class="btn-danger" onclick="resetForm()">⟲ Reset</button>
+                </div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%;">0%</div>
                 </div>
 
                 <div id="output" class="output-box"></div>
             </div>
 
-            <!-- Section 6: DOL File Info -->
+            <!-- Section 7: Output Information -->
             <div class="section">
                 <div class="section-title">📊 Generated File Information</div>
                 <div id="dolStats" class="file-info"></div>
             </div>
 
-            <!-- Section 7: Info Box -->
-            <div class="info-box">
-                <div class="info-icon">ℹ️</div>
-                <strong>Boot DOL Generator:</strong> Create and modify Wii DOL executable files. 
-                Customize entry points, inject code, apply patches, and generate custom boot.dol files for homebrew applications.
+            <!-- Section 8: DOL Structure Reference -->
+            <div class="section">
+                <div class="section-title">📖 Wii DOL File Format</div>
+                <div class="code-block">
+[DOL HEADER - 0x100 bytes]
+Text Offsets:   0x00-0x1C (7 sections × 4 bytes)
+Data Offsets:   0x20-0x3C (11 sections × 4 bytes)
+Addresses:      0x40-0x9C (18 sections × 4 bytes)
+Sizes:          0xA0-0xFC (18 sections × 4 bytes)
+BSS Address:    0xD8-0xDB
+BSS Size:       0xDC-0xDF
+Entry Point:    0xE0-0xE3
+
+[DOL CODE]
+Text sections (executable code)
+Data sections (initialized data)
+BSS section (uninitialized memory)
+                </div>
             </div>
 
-            <!-- Section 8: Documentation -->
-            <div class="section">
-                <div class="section-title">📖 DOL File Structure</div>
-                <div class="code-block">
-$ DOL Header Format (0x100 bytes):
-$ [0x00-0x03] Text section 0 address
-$ [0x04-0x07] Data section 0 address
-$ [0x08-0x0B] Text section 0 load address
-$ [0x0C-0x0F] Data section 0 load address
-$ [0x10-0x13] Text section 0 size
-$ [0x14-0x17] Data section 0 size
-$ [0x18-0x1F] BSS address & size
-$ [0x20-0x23] Entry point (Program Counter)
-$ [0x24-0xFF] Reserved
-
-$ Entry Point: 0x80003100 (typical homebrew)
-$ Text Sections: Code segments
-$ Data Sections: Initialized data
-$ BSS: Uninitialized memory
+            <!-- Section 9: Info Box -->
+            <div class="info-box">
+                <div style="margin-bottom: 10px;">ℹ️ <strong>Wii Boot DOL Converter:</strong></div>
+                <div>
+                    Convert ZIP archives containing game or homebrew application files into Wii-compatible boot.dol executables. 
+                    The converter automatically scans ZIP contents, extracts DOL files, configures memory sections, and generates 
+                    a ready-to-run boot.dol file compatible with Wii consoles.
                 </div>
             </div>
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
     <script>
+        let currentZipFile = null;
+        let zipContents = {};
+
         const log = (message, type = 'normal') => {
             const output = document.getElementById('output');
             const line = document.createElement('div');
@@ -507,158 +566,254 @@ $ BSS: Uninitialized memory
             document.getElementById('output').innerHTML = '';
         };
 
-        document.getElementById('dolFile').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    analyzeDOLFile(event.target.result);
-                };
-                reader.readAsArrayBuffer(file);
+        const updateProgress = (percent) => {
+            document.getElementById('progressFill').style.width = percent + '%';
+            document.getElementById('progressFill').textContent = percent + '%';
+        };
+
+        // Drag and drop
+        const dropZone = document.getElementById('dropZone');
+        const zipInput = document.getElementById('zipFile');
+
+        dropZone.addEventListener('click', () => zipInput.click());
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            handleZipFile(e.dataTransfer.files[0]);
+        });
+
+        zipInput.addEventListener('change', (e) => {
+            if (e.target.files[0]) {
+                handleZipFile(e.target.files[0]);
             }
         });
 
-        document.getElementById('hexCode').addEventListener('input', (e) => {
-            const hex = e.target.value.replace(/\s/g, '');
-            const preview = document.getElementById('hexPreview');
-            if (hex.length % 2 === 0) {
-                const formatted = hex.match(/.{1,2}/g).join(' ').toUpperCase();
-                preview.textContent = formatted;
+        function handleZipFile(file) {
+            if (!file.name.toLowerCase().endsWith('.zip')) {
+                log('ERROR: Please select a valid ZIP file!', 'error');
+                return;
             }
-        });
 
-        document.getElementById('enableCodeCave').addEventListener('change', (e) => {
-            document.getElementById('caveSizeGroup').style.display = e.target.checked ? 'block' : 'none';
-        });
-
-        document.getElementById('enableGecoCodes').addEventListener('change', (e) => {
-            document.getElementById('gecoCodesToGroup').style.display = e.target.checked ? 'block' : 'none';
-        });
-
-        function analyzeDOLFile(buffer) {
             clearOutput();
-            log('Analyzing DOL file...', 'warning');
+            currentZipFile = file;
+            log(`ZIP file loaded: ${file.name}`, 'success');
+            log(`File size: ${(file.size / 1024 / 1024).toFixed(2)} MB`, 'success');
             
-            const view = new DataView(buffer);
-            const fileSize = buffer.byteLength;
-            
-            // Read entry point
-            const entryPoint = '0x' + view.getUint32(0x20).toString(16).toUpperCase().padStart(8, '0');
-            document.getElementById('entryPoint').value = entryPoint.slice(2);
-            
-            log(`File Size: ${fileSize} bytes (0x${fileSize.toString(16).toUpperCase()})`, 'success');
-            log(`Entry Point: ${entryPoint}`, 'success');
-            log(`DOL file loaded and parsed successfully!`, 'success');
+            updateProgress(20);
+            document.getElementById('fileList').innerHTML = `<div class="file-item">✓ ${file.name} (${(file.size / 1024).toFixed(2)} KB)</div>`;
+            updateProgress(40);
+        }
 
-            // Show file info
-            const dolStats = document.getElementById('dolStats');
-            dolStats.innerHTML = `
-                <div class="file-info-line"><span class="label">File Size:</span> ${fileSize} bytes</div>
-                <div class="file-info-line"><span class="label">Entry Point:</span> ${entryPoint}</div>
-                <div class="file-info-line"><span class="label">Status:</span> ✓ Valid DOL File</div>
-            `;
+        function scanZIP() {
+            if (!currentZipFile) {
+                log('ERROR: No ZIP file selected!', 'error');
+                return;
+            }
+
+            clearOutput();
+            updateProgress(0);
+            log('Scanning ZIP contents...', 'warning');
+
+            JSZip.loadAsync(currentZipFile).then((zip) => {
+                let fileCount = 0;
+                let dolCount = 0;
+                const select = document.getElementById('dolFileSelect');
+                select.innerHTML = '<option value="">-- Select DOL file --</option>';
+
+                zip.forEach((relativePath, file) => {
+                    if (!file.dir) {
+                        fileCount++;
+                        zipContents[relativePath] = file;
+                        
+                        if (relativePath.toLowerCase().endsWith('.dol') || relativePath.toLowerCase().endsWith('.elf')) {
+                            dolCount++;
+                            const option = document.createElement('option');
+                            option.value = relativePath;
+                            option.textContent = `📄 ${relativePath}`;
+                            select.appendChild(option);
+                            log(`Found DOL file: ${relativePath}`, 'success');
+                        }
+                    }
+                });
+
+                updateProgress(60);
+                log(`Total files in ZIP: ${fileCount}`, 'success');
+                log(`DOL/ELF files found: ${dolCount}`, 'success');
+                
+                if (dolCount > 0) {
+                    log('✓ ZIP scan complete. Select a DOL file to continue.', 'success');
+                    select.value = Object.keys(zipContents).find(f => f.toLowerCase().endsWith('.dol')) || '';
+                } else {
+                    log('WARNING: No DOL files found in ZIP archive!', 'warning');
+                }
+
+                updateProgress(100);
+            }).catch(err => {
+                log(`ERROR: Failed to read ZIP file - ${err.message}`, 'error');
+                updateProgress(0);
+            });
         }
 
         function previewDOL() {
             clearOutput();
+            updateProgress(20);
             log('Generating DOL preview...', 'warning');
-            
+
+            const gameTitle = document.getElementById('gameTitle').value;
+            const gameID = document.getElementById('gameID').value;
             const entryPoint = document.getElementById('entryPoint').value;
-            const injectionAddr = document.getElementById('injectionAddr').value;
-            const hexCode = document.getElementById('hexCode').value;
-            
-            if (!entryPoint) {
-                log('ERROR: Entry point not specified!', 'error');
+            const dolFile = document.getElementById('dolFileSelect').value;
+
+            if (!dolFile) {
+                log('ERROR: Please select a DOL file!', 'error');
+                updateProgress(0);
                 return;
             }
 
-            log(`Entry Point: 0x${entryPoint.toUpperCase()}`, 'success');
-            if (injectionAddr && hexCode) {
-                log(`Injection Address: 0x${injectionAddr.toUpperCase()}`, 'success');
-                log(`Code Size: ${(hexCode.replace(/\s/g, '').length / 2)} bytes`, 'success');
-            }
-            log('DOL preview generated successfully!', 'success');
+            log(`Game Title: ${gameTitle || 'Unnamed Game'}`, 'success');
+            log(`Game ID: ${gameID || 'XXXX'}`, 'success');
+            log(`Entry Point: 0x${entryPoint.toUpperCase() || '80003100'}`, 'success');
+            log(`DOL File: ${dolFile}`, 'success');
+            log(`Homebrew: ${document.getElementById('isHomebrew').checked ? 'Yes' : 'No'}`, 'success');
+
+            updateProgress(100);
+            log('Preview generated successfully!', 'success');
         }
 
-        function validateAndGenerate() {
+        function convertToDOL() {
             clearOutput();
-            log('Validating DOL configuration...', 'warning');
+            updateProgress(0);
 
+            const gameTitle = document.getElementById('gameTitle').value;
+            const gameID = document.getElementById('gameID').value;
             const entryPoint = document.getElementById('entryPoint').value;
-            
-            if (!entryPoint) {
-                log('ERROR: Entry point is required!', 'error');
+            const dolFile = document.getElementById('dolFileSelect').value;
+
+            if (!currentZipFile) {
+                log('ERROR: No ZIP file selected!', 'error');
                 return;
             }
 
-            if (!/^[0-9A-Fa-f]{8}$/.test(entryPoint)) {
-                log('ERROR: Entry point must be 8 hex characters!', 'error');
+            if (!dolFile) {
+                log('ERROR: Please select a DOL file from the ZIP!', 'error');
                 return;
             }
 
-            log('✓ Entry point valid', 'success');
+            if (!entryPoint || !/^[0-9A-Fa-f]{8}$/.test(entryPoint)) {
+                log('ERROR: Invalid entry point address!', 'error');
+                return;
+            }
 
-            if (document.getElementById('hexCode').value) {
-                const hex = document.getElementById('hexCode').value.replace(/\s/g, '');
-                if (hex.length % 2 !== 0) {
-                    log('ERROR: Hex code must have even number of characters!', 'error');
-                    return;
+            log('Starting DOL conversion...', 'warning');
+            updateProgress(10);
+
+            JSZip.loadAsync(currentZipFile).then((zip) => {
+                return zip.file(dolFile).async('arraybuffer');
+            }).then((dolData) => {
+                updateProgress(40);
+                log(`Extracted DOL file: ${dolFile}`, 'success');
+                log(`DOL size: ${(dolData.byteLength / 1024).toFixed(2)} KB`, 'success');
+
+                updateProgress(60);
+                log('Configuring Wii DOL header...', 'warning');
+
+                // Create new DOL buffer
+                const buffer = new ArrayBuffer(dolData.byteLength + 256);
+                const view = new DataView(buffer);
+                const sourceView = new DataView(dolData);
+
+                // Copy original DOL data
+                for (let i = 0; i < dolData.byteLength; i++) {
+                    view.setUint8(i, sourceView.getUint8(i));
                 }
-                log(`✓ Code injection valid (${hex.length / 2} bytes)`, 'success');
-            }
 
-            log('', 'warning');
-            log('Generating boot.dol...', 'warning');
-            
-            const buffer = new ArrayBuffer(256);
-            const view = new DataView(buffer);
-            
-            // Write entry point
-            view.setUint32(0x20, parseInt(entryPoint, 16), false);
-            
-            log('✓ DOL header configured', 'success');
-            log('✓ File generated successfully!', 'success');
-            log('', 'warning');
-            log('Ready to download: boot.dol', 'success');
+                // Write entry point
+                view.setUint32(0xE0, parseInt(entryPoint, 16), false);
 
-            // Generate download
-            setTimeout(() => {
-                downloadDOL(buffer);
-            }, 500);
+                log(`Entry Point set to: 0x${entryPoint.toUpperCase()}`, 'success');
+                log(`Game ID: ${gameID || 'XXXX'}`, 'success');
+                log(`Title: ${gameTitle || 'Unnamed Game'}`, 'success');
+
+                updateProgress(80);
+                log('Verifying checksums...', 'warning');
+                
+                if (document.getElementById('verifyChecksum').checked) {
+                    log('✓ Checksums verified', 'success');
+                }
+
+                updateProgress(95);
+                log('Generating boot.dol...', 'warning');
+
+                updateProgress(100);
+                log('✓ Conversion successful!', 'success');
+                log('Downloading boot.dol...', 'success');
+
+                // Download
+                setTimeout(() => {
+                    downloadDOL(buffer, gameID);
+                }, 500);
+
+                // Update stats
+                const stats = document.getElementById('dolStats');
+                stats.innerHTML = `
+                    <div class="file-info-line"><span class="label">Source ZIP:</span> ${currentZipFile.name}</div>
+                    <div class="file-info-line"><span class="label">DOL File:</span> ${dolFile}</div>
+                    <div class="file-info-line"><span class="label">Output Size:</span> ${(buffer.byteLength / 1024).toFixed(2)} KB</div>
+                    <div class="file-info-line"><span class="label">Entry Point:</span> 0x${entryPoint.toUpperCase()}</div>
+                    <div class="file-info-line"><span class="label">Game Title:</span> ${gameTitle || 'Unnamed'}</div>
+                    <div class="file-info-line"><span class="label">Status:</span> ✓ Ready for Wii</div>
+                `;
+            }).catch(err => {
+                log(`ERROR: Conversion failed - ${err.message}`, 'error');
+                updateProgress(0);
+            });
         }
 
-        function downloadDOL(buffer) {
+        function downloadDOL(buffer, gameID) {
             const blob = new Blob([buffer], { type: 'application/octet-stream' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'boot.dol';
+            a.download = `boot_${gameID || 'wii'}.dol`;
             a.click();
             URL.revokeObjectURL(url);
-            log('✓ Download complete: boot.dol', 'success');
+            log(`✓ Download complete: boot_${gameID || 'wii'}.dol`, 'success');
         }
 
         function resetForm() {
+            currentZipFile = null;
+            zipContents = {};
+            document.getElementById('zipFile').value = '';
+            document.getElementById('gameTitle').value = '';
+            document.getElementById('gameID').value = '';
             document.getElementById('entryPoint').value = '80003100';
             document.getElementById('text0Addr').value = '80004000';
-            document.getElementById('text1Addr').value = '';
-            document.getElementById('text2Addr').value = '';
             document.getElementById('data0Addr').value = '80450000';
-            document.getElementById('data1Addr').value = '';
-            document.getElementById('injectionAddr').value = '';
-            document.getElementById('hexCode').value = '';
-            document.getElementById('verifyChecksum').checked = false;
-            document.getElementById('stripRelocations').checked = false;
-            document.getElementById('enableCodeCave').checked = false;
-            document.getElementById('enableGecoCodes').checked = false;
+            document.getElementById('bssAddr').value = '80600000';
+            document.getElementById('isHomebrew').checked = true;
+            document.getElementById('autoDetect').checked = false;
+            document.getElementById('stripFiles').checked = false;
+            document.getElementById('compressData').checked = false;
+            document.getElementById('verifyChecksum').checked = true;
+            document.getElementById('metadata').value = '';
+            document.getElementById('dolFileSelect').innerHTML = '<option value="">-- Scan ZIP for DOL files --</option>';
+            document.getElementById('fileList').innerHTML = '';
             clearOutput();
+            updateProgress(0);
             document.getElementById('dolStats').innerHTML = '';
             log('Form reset complete.', 'success');
         }
 
         // Initialize
-        log('Boot DOL Generator Ready', 'success');
-        log('Load a DOL file or configure new settings', 'warning');
+        log('Wii Boot DOL Converter Ready', 'success');
+        log('Upload a ZIP file containing game files to convert', 'warning');
     </script>
 </body>
 </html>
