@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joke Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .title {
+            font-size: 42px;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .joke-container {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .joke-container:hover {
+            transform: scale(1.02);
+        }
+
+        .joke-text {
+            font-size: 20px;
+            font-weight: 500;
+            line-height: 1.6;
+            letter-spacing: 0.5px;
+        }
+
+        .joke-type {
+            font-size: 12px;
+            text-transform: uppercase;
+            opacity: 0.8;
+            margin-top: 15px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .loading {
+            font-size: 18px;
+            font-weight: 500;
+            opacity: 0.7;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-category {
+            background: #f0f0f0;
+            color: #333;
+            padding: 10px 16px;
+            font-size: 14px;
+            flex: 0 1 auto;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .btn-category:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .btn-category.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .category-section {
+            margin-bottom: 25px;
+        }
+
+        .category-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .category-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .emoji {
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+
+        .error {
+            color: #e74c3c;
+            text-align: center;
+            padding: 15px;
+            background: #fadbd8;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .stats-text {
+            color: #999;
+            font-size: 14px;
+        }
+
+        .stats-number {
+            color: #667eea;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+
+            .title {
+                font-size: 32px;
+            }
+
+            .joke-text {
+                font-size: 18px;
+            }
+
+            .emoji {
+                font-size: 40px;
+            }
+
+            .controls {
+                gap: 10px;
+            }
+
+            .btn {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="emoji">😂</div>
+            <h1 class="title">Joke Generator</h1>
+            <p class="subtitle">Get a laugh every time!</p>
+        </div>
+
+        <div id="errorContainer"></div>
+
+        <div class="category-section">
+            <p class="category-label">Select Category</p>
+            <div class="category-buttons">
+                <button class="btn-category active" data-category="Any">Any</button>
+                <button class="btn-category" data-category="General">General</button>
+                <button class="btn-category" data-category="Programming">Programming</button>
+                <button class="btn-category" data-category="Knock-knock">Knock-Knock</button>
+                <button class="btn-category" data-category="Spooky">Spooky</button>
+                <button class="btn-category" data-category="Christmas">Christmas</button>
+            </div>
+        </div>
+
+        <div class="joke-container" id="jokeDisplay">
+            <div class="emoji">🤔</div>
+            <p class="joke-text">Click the button below to get a joke!</p>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" id="getJokeBtn">Get a Joke!</button>
+        </div>
+
+        <div class="stats">
+            <p class="stats-text">Jokes fetched: <span class="stats-number" id="jokeCount">0</span></p>
+        </div>
+    </div>
+
+    <script>
+        let currentCategory = 'Any';
+        let jokeCount = 0;
+
+        const jokeDisplay = document.getElementById('jokeDisplay');
+        const getJokeBtn = document.getElementById('getJokeBtn');
+        const categoryButtons = document.querySelectorAll('.btn-category');
+        const errorContainer = document.getElementById('errorContainer');
+        const jokeCountDisplay = document.getElementById('jokeCount');
+
+        // Category button event listeners
+        categoryButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                categoryButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentCategory = btn.dataset.category;
+                clearError();
+            });
+        });
+
+        // Get joke button event listener
+        getJokeBtn.addEventListener('click', fetchJoke);
+
+        // Allow fetching by pressing Enter
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                fetchJoke();
+            }
+        });
+
+        async function fetchJoke() {
+            clearError();
+            jokeDisplay.innerHTML = '<div class="loading">Loading joke...</div>';
+            getJokeBtn.disabled = true;
+
+            try {
+                const response = await fetch(`https://v2.jokeapi.dev/joke/${encodeURIComponent(currentCategory)}`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch joke');
+                }
+
+                const data = await response.json();
+
+                let jokeText = '';
+                let jokeType = '';
+
+                if (data.type === 'single') {
+                    jokeText = data.joke;
+                    jokeType = 'Single Joke';
+                } else if (data.type === 'twopart') {
+                    jokeText = `${data.setup}<br><br>🎭<br><br>${data.delivery}`;
+                    jokeType = 'Two-part Joke';
+                } else {
+                    throw new Error('Unexpected joke format');
+                }
+
+                jokeCount++;
+                jokeCountDisplay.textContent = jokeCount;
+                localStorage.setItem('jokeCount', jokeCount);
+
+                jokeDisplay.innerHTML = `
+                    <p class="joke-text">${jokeText}</p>
+                    <p class="joke-type">${jokeType} • ${currentCategory}</p>
+                `;
+            } catch (error) {
+                showError('Sorry, could not fetch a joke at this time. Please try again!');
+                jokeDisplay.innerHTML = '<p class="joke-text">😢 Something went wrong. Try again!</p>';
+            } finally {
+                getJokeBtn.disabled = false;
+            }
+        }
+
+        function showError(message) {
+            errorContainer.innerHTML = `<div class="error">${message}</div>`;
+        }
+
+        function clearError() {
+            errorContainer.innerHTML = '';
+        }
+
+        // Load joke count from localStorage
+        function loadJokeCount() {
+            const saved = localStorage.getItem('jokeCount');
+            if (saved) {
+                jokeCount = parseInt(saved);
+                jokeCountDisplay.textContent = jokeCount;
+            }
+        }
+
+        // Initialize
+        loadJokeCount();
+    </script>
+</body>
+</html>
